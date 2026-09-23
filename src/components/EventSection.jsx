@@ -11,7 +11,7 @@ function EventSection({
   const [selectedCategory, setSelectedCategory] =
     useState("All");
 
-  const filteredEvents = events.filter(function (
+  const filteredEvents = events.filter(Boolean).filter(function (
     event
   ) {
     const matchesSearch = event.title

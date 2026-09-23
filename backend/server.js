@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");  //cors is used to allow the frontend to access the backend.//
 const app = express();  
 app.use(cors()); 
+app.use(express.json());
 const initialEvents = [
   {
     id: 1,
@@ -55,6 +56,22 @@ app.delete("/api/events/:id", (req, res)=>{
     initialEvents.splice(eventIndex, 1);
     res.json({ message: "Event deleted successfully" });
 })
-app.listen(4000, ()=>{
-    console.log("Server is running on port 4000");   //this is used to run the backend like loading the backed in localhost 4000 //
+app.post("/api/events", (req, res)=>{
+  const newEvent = req.body;
+
+  if (!newEvent || !newEvent.title || !newEvent.category) {
+    return res.status(400).json({
+      message: "Title and category are required",
+    });
+  }
+
+  initialEvents.push(newEvent);
+  res.json({
+    message: "Event added successfully",
+    event: newEvent
+  });
+});
+
+app.listen(4000,()=>{
+    console.log("server is running on port 4000"); // without these the server will not start 
 })
