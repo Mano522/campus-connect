@@ -4,16 +4,19 @@ import Hero from "../components/Hero";
 
 function HomePage({events,
     onAddEvent,
-    onDeleteEvent,}){
+    onDeleteEvent,
+}){
     return(
         <>
         <Hero title="Discover what is happening in Campus"
         description="Find workshops,sports,activities,club Meeting,and opportunities to connect with other students."/>
-        <EventForm 
-        onAddEvent={onAddEvent}/>
+        <EventForm
+        onAddEvent={onAddEvent}
+        />
         <EventSection 
         events={events}
-        onDeleteEvent={onDeleteEvent}/>
+        onDeleteEvent={onDeleteEvent}
+        />
         </>
     );
 }

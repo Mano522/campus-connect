@@ -1,14 +1,29 @@
 import { useState } from "react";
 
-function EventForm({ onAddEvent }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    date: "",
-    time: "",
-    location: "",
-    description: "",
-  });
+function getInitialFormData(editingEvent) {
+  if (!editingEvent) {
+    return {
+      title: "",
+      category: "",
+      date: "",
+      time: "",
+      location: "",
+      description: "",
+    };
+  }
+
+  return {
+    ...editingEvent,
+    date: editingEvent.date.includes(" ")
+      ? new Date(editingEvent.date).toISOString().slice(0, 10)
+      : editingEvent.date,
+  };
+}
+
+function EventForm({ onAddEvent, editingEvent, onUpdateEvent }) {
+  const [formData, setFormData] = useState(() =>
+    getInitialFormData(editingEvent)
+  );
 
   const [formError, setFormError] = useState("");
 
@@ -22,7 +37,7 @@ function EventForm({ onAddEvent }) {
     });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (
@@ -37,8 +52,8 @@ function EventForm({ onAddEvent }) {
       return;
     }
 
-    const newEvent = {
-      id: Date.now(),
+    const eventData = {
+      id: editingEvent ? editingEvent.id : Date.now(),
       title: formData.title,
       category: formData.category,
       date: formData.date,
@@ -47,25 +62,35 @@ function EventForm({ onAddEvent }) {
       description: formData.description,
     };
 
-    onAddEvent(newEvent);
+    try {
+      if (editingEvent) {
+        await onUpdateEvent(eventData);
+      } else {
+        onAddEvent(eventData);
+      }
 
-    setFormData({
-      title: "",
-      category: "",
-      date: "",
-      time: "",
-      location: "",
-      description: "",
-    });
+      setFormData({
+        title: "",
+        category: "",
+        date: "",
+        time: "",
+        location: "",
+        description: "",
+      });
 
-    setFormError("");
+      setFormError("");
+    } catch (error) {
+      setFormError(error.message);
+    }
   }
 
   return (
     <section className="event-form-section">
-      <p className="section-label">Create an Activity</p>
+      <p className="section-label">
+        {editingEvent ? "Edit an Activity" : "Create an Activity"}
+      </p>
 
-      <h2>Add a New Campus Event</h2>
+      <h2>{editingEvent ? "Edit Campus Event" : "Add a New Campus Event"}</h2>
 
       <form className="event-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -151,7 +176,7 @@ function EventForm({ onAddEvent }) {
         {formError !== "" && <p className="form-error">{formError}</p>}
 
         <button className="submit-button" type="submit">
-          Add Event
+          {editingEvent ? "Update Event" : "Add Event"}
         </button>
       </form>
     </section>

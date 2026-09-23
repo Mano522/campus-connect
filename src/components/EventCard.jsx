@@ -13,7 +13,6 @@ function EventCard({
   function handleDeleteClick() {
     onDeleteEvent(id);
   }
-
   return (
     <article className="event-card">
       <p className="event-category">
@@ -46,7 +45,9 @@ function EventCard({
       >
         View Details
       </Link>
-
+ <Link className="delete-button" to={`/events/${id}/edit`}>
+        Edit
+      </Link>
       <button
         className="delete-button"
         type="button"
@@ -54,6 +55,7 @@ function EventCard({
       >
         Delete
       </button>
+     
     </article>
   );
 }

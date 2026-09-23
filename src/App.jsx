@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import EventsPage from "./pages/EventsPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
+import EventEditPage from "./pages/EventEditPage";
 import AboutPage from "./pages/AboutPage";
 function App() {
     const [events, setEvents] = useState([]);
@@ -48,6 +49,24 @@ function App() {
         })
        })
     }
+    async function handleUpdateEvent(updatedEvent) {
+        const response = await fetch(`http://localhost:4000/api/events/${updatedEvent.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedEvent),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Could not update event");
+        }
+
+        setEvents((currentEvents) =>
+            currentEvents.map((event) =>
+                event.id === data.event.id ? data.event : event
+            )
+        );
+    }
 
     return (
         <div>
@@ -80,6 +99,16 @@ function App() {
                     element={
                         <EventDetailsPage
                             events={events}
+                        />
+                    }
+                />
+
+                <Route
+                    path="/events/:eventId/edit"
+                    element={
+                        <EventEditPage
+                            events={events}
+                            onUpdateEvent={handleUpdateEvent}
                         />
                     }
                 />

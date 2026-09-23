@@ -71,6 +71,25 @@ app.post("/api/events", (req, res)=>{
     event: newEvent
   });
 });
+app.put("/api/events/:id", (req, res)=>{
+    const eventId = Number(req.params.id);
+  const eventIndex =initialEvents.findIndex(function (event) {
+    return event.id === eventId;
+  });
+  if(eventIndex === -1){
+    return res.status(404).json({
+      message:"Event Not Found"
+    });
+  }
+  initialEvents[eventIndex] = {
+    ...initialEvents[eventIndex],
+    ...req.body
+  };
+  res.json({
+    message:"Event Updated Successfully!!",
+    event: initialEvents[eventIndex]
+  })
+})
 
 app.listen(4000,()=>{
     console.log("server is running on port 4000"); // without these the server will not start 

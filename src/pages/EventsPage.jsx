@@ -1,7 +1,9 @@
 import EventSection from "../components/EventSection";
-import { useEffect } from "react";
 
-function EventsPage({ events, onDeleteEvent }) {
+function EventsPage({
+    events,
+    onDeleteEvent,
+}) {
     return (
         <>
             <section>
