@@ -9,7 +9,6 @@ import EventDetailsPage from "./pages/EventDetailsPage";
 import AboutPage from "./pages/AboutPage";
 function App() {
     const [events, setEvents] = useState([]);
-    
     useEffect(()=>{
             fetch("http://localhost:4000/api/events")
             .then((response)=>response.json())
@@ -23,11 +22,17 @@ function App() {
     }
 
     function handleDeleteEvent(eventId) {
-        const updatedEvents = events.filter(function (event) {
-            return event.id !== eventId;
-        });
-
-        setEvents(updatedEvents);
+       fetch(`http://localhost:4000/api/events/${eventId}`,{
+        method: "DELETE"
+       }).then((response)=>response.json())
+       .then((data)=>{
+        console.log(data);
+        fetch("http://localhost:4000/api/events")
+        .then((response)=>response.json())
+        .then((data)=>{
+            setEvents(data);
+        })
+       })
     }
 
     return (
