@@ -1,62 +1,37 @@
-const express = require("express");  
-const cors = require("cors");  //cors is used to allow the frontend to access the backend.//
-const app = express();  
-app.use(cors()); 
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const Event = require("./models/Event");
+
+const app = express();
+
+app.use(cors());
 app.use(express.json());
-const initialEvents = [
-  {
-    id: 1,
-    title: "MERN Stack Workshop",
-    category: "Technology",
-    date: "25 September 2026",
-    time: "10:00 AM",
-    location: "Computer Lab 1",
-    description:
-      "Learn the basics of MongoDB, Express, React, and Node.js through a practical workshop.",
-  },
-  {
-    id: 2,
-    title: "College Hackathon",
-    category: "Technology",
-    date: "28 September 2026",
-    time: "9:00 AM",
-    location: "Main Auditorium",
-    description:
-      "Form a team, solve a real problem, and present your solution to mentors.",
-  },
-  {
-    id: 3,
-    title: "Photography Club Meet",
-    category: "Club",
-    date: "30 September 2026",
-    time: "2:00 PM",
-    location: "Seminar Hall",
-    description:
-      "Meet fellow photography enthusiasts and learn basic composition techniques.",
-  },
-];              //.get ,put,post,delete,put means updating,post means creating,delete means deleting, get means getting data from the server.//
-app.get("/", (req, res)=>{
-    res.send("Backend is working ");
-}) 
 
-app.get("/api/events", (req, res)=>{
-
-    res.json(initialEvents);
-})
-app.delete("/api/events/:id", (req, res)=>{
-    const eventId = Number(req.params.id);
-  const eventIndex =initialEvents.findIndex(function (event) {
-    return event.id === eventId;
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MONGODB Connected Successfully");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection Error:", error.message);
   });
-  if (eventIndex === -1) {
-    return res.status(404).json({
-        message: "Event not found",
-      });
+
+app.get("/", (req, res) => {
+  res.send("Backend is working");
+});
+
+app.get("/api/events", async (req, res) => {
+  try {
+    const events = await Event.find().sort({ _id: -1 });
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-    initialEvents.splice(eventIndex, 1);
-    res.json({ message: "Event deleted successfully" });
-})
-app.post("/api/events", (req, res)=>{
+});
+
+app.post("/api/events", async (req, res) => {
   const newEvent = req.body;
 
   if (!newEvent || !newEvent.title || !newEvent.category) {
@@ -65,32 +40,75 @@ app.post("/api/events", (req, res)=>{
     });
   }
 
-  initialEvents.push(newEvent);
-  res.json({
-    message: "Event added successfully",
-    event: newEvent
-  });
-});
-app.put("/api/events/:id", (req, res)=>{
-    const eventId = Number(req.params.id);
-  const eventIndex =initialEvents.findIndex(function (event) {
-    return event.id === eventId;
-  });
-  if(eventIndex === -1){
-    return res.status(404).json({
-      message:"Event Not Found"
-    });
-  }
-  initialEvents[eventIndex] = {
-    ...initialEvents[eventIndex],
-    ...req.body
-  };
-  res.json({
-    message:"Event Updated Successfully!!",
-    event: initialEvents[eventIndex]
-  })
-})
+  try {
+    const payload = {
+      id: typeof newEvent.id === "number" ? newEvent.id : Date.now(),
+      title: newEvent.title,
+      category: newEvent.category,
+      date: newEvent.date,
+      time: newEvent.time,
+      location: newEvent.location,
+      description: newEvent.description,
+    };
 
-app.listen(4000,()=>{
-    console.log("server is running on port 4000"); // without these the server will not start 
-})
+    const savedEvent = await Event.create(payload);
+
+    res.status(201).json({
+      message: "Event added successfully",
+      event: savedEvent,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.delete("/api/events/:id", async (req, res) => {
+  const eventId = Number(req.params.id);
+
+  if (Number.isNaN(eventId)) {
+    return res.status(400).json({ message: "Invalid event id" });
+  }
+
+  try {
+    const deletedEvent = await Event.findOneAndDelete({ id: eventId });
+
+    if (!deletedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.json({ message: "Event deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put("/api/events/:id", async (req, res) => {
+  const eventId = Number(req.params.id);
+
+  if (Number.isNaN(eventId)) {
+    return res.status(400).json({ message: "Invalid event id" });
+  }
+
+  try {
+    const updatedEvent = await Event.findOneAndUpdate(
+      { id: eventId },
+      { ...req.body, id: eventId },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(404).json({ message: "Event Not Found" });
+    }
+
+    res.json({
+      message: "Event Updated Successfully!!",
+      event: updatedEvent,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.listen(4000, () => {
+  console.log("server is running on port 4000");
+});
